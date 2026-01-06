@@ -19,10 +19,22 @@ export default function GCashPaymentSystem() {
   const [errors, setErrors] = useState({});
   const [serverMessage, setServerMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     let formattedValue = value;
+
+    if (name === "phonenumber") {
+      formattedValue = value.replace(/\D/g, "");
+      if (formattedValue.length > 11) return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const validatedForm = () => {
@@ -70,18 +82,66 @@ export default function GCashPaymentSystem() {
     if (!validatedForm()) {
       return;
     }
+
     setIsProcessing(true);
     setServerMessage("");
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setServerMessage("Redirecting to Gcash...");
+
+      setTimeout(() => {
+        setPaymentSuccess(true);
+        setServerMessage(
+          `GCash payment of ₱ ${parseFloat(formData.amount).toLocaleString(
+            "en-PH",
+            { minimumFractionDigits: 2 }
+          )} processed succesfully! `
+        );
+      }, 1500);
+      setTimeout(() => {
+        setPaymentSuccess(false);
+        setFormData({
+          amount: "",
+          email: "",
+          phoneNumber: "",
+          description: "",
+        });
+        setServerMessage("");
+      }, 4000);
+    } catch (error) {
+      setServerMessage("Payment failed. Please try again.");
+      console.error("Payment error:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
+
+  if (paymentSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="bg-blue-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-16 h-16 text-blue-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Payment Successful!
+          </h2>
+          <p className="text-gray-600 text-lg mb-4">{serverMessage}</p>
+          <div className="bg-blue-50 rounded-lg p-4 mb-4">
+            <p className="text-sm text-gray-600">Transaction Details</p>
+            <p className="text-lg font-semibold text-blue-600">
+              {formData.description}
+            </p>
+          </div>
+          <p className="text-sm text-gray-500">
+            A receipt has been sent to {formData.email}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-green-300 to-neutral-800 flex items-center justify-center p-4 ">
@@ -98,6 +158,7 @@ export default function GCashPaymentSystem() {
             Fast, secure, and convenient payment using G-Cash
           </p>
         </div>
+
         {/**Security Badge */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 flex items-start">
           <Lock className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
@@ -272,7 +333,12 @@ export default function GCashPaymentSystem() {
           )}
         </button>
 
-        <div></div>
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+            <Lock className="w-4 h-4" />
+            <p>Powered by PayMongo • Secured GCash Payment </p>
+          </div>
+        </div>
       </div>
     </div>
   );
