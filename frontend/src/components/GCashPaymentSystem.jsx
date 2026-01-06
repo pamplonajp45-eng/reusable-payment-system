@@ -25,6 +25,47 @@ export default function GCashPaymentSystem() {
     let formattedValue = value;
   };
 
+  const validatedForm = () => {
+    const newErrors = {};
+
+    //Validation ng amount
+    if (!formData.amount) {
+      newErrors.amount = "Amount is required";
+    } else if (parseFloat(formData.amount) <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    } else if (parseFloat(formData.amount) < 100) {
+      newErrors.amount = "Minimum amount is  ₱100";
+    }
+
+    //validation ng email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    //Validation ng phoneNumber
+    if (!phoneNumber) {
+      newErrors.phoneNumber = "GCash Mobile Number is required";
+    } else if (formData.phoneNumber.length !== 11) {
+      newErrors.phoneNumber =
+        "Phone number must be 11 digits ( e.g., 09123456789)";
+    } else if (formData.phoneNumber.startsWith("09")) {
+      newErrors.phoneNumber = "Phone number starts with 09 ";
+    }
+
+    //Validation ng description
+    if (!description) {
+      newErrors.description = "Please put description";
+    } else if (formData.description.trim().length < 5) {
+      newErrors.description = "Description must be atleaset 5 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
     if (!validatedForm()) {
       return;
@@ -198,8 +239,40 @@ export default function GCashPaymentSystem() {
         <button
           onClick={handleSubmit}
           disabled={isProcessing}
-          className=" w-full text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all disabled:bg-gray-400 bg-blue-500 "
-        ></button>
+          className="mt-8 w-full text-white py-3.5 rounded-xl font-semibold text-lg hover:bg-green-800 transition-all disabled:bg-gray-400 bg-green-600 "
+        >
+          {isProcessing ? (
+            <span className=" flex items-center justify-center">
+              <svg className="animate-spin h-5 w-5 mr-3 " viewBox="0 0 24 24">
+                <circle
+                  className=" opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8VOC5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.0=2 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Processing Payment...
+            </span>
+          ) : (
+            `Pay ( ₱  ${
+              formData.amount
+                ? parseFloat(formData.amount).toLocaleString("en-PH", {
+                    mininumFraction: 2,
+                  })
+                : "0.00 )"
+            } `
+          )}
+        </button>
+
+        <div></div>
       </div>
     </div>
   );
